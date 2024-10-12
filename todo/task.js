@@ -1,39 +1,71 @@
-window.onload = function() {
-    const tasksList = document.getElementById('tasks__list');
-    const taskInput = document.getElementById('task__input');
-    const tasksForm = document.getElementById('tasks__form');
+const taskInput = document.getElementById('task__input');
+let taskListArray;
+let taskListArrayRemoveButton;
 
-    // Получаем сохраненные задачи из localStorage при загрузке страницы
-    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 
-    function renderTasks() {
-        tasksList.innerHTML = '';
-        tasks.forEach((task, index) => {
-            const taskItem = document.createElement('div');
-            taskItem.classList.add('task');
-            taskItem.innerHTML = `
-                <div class="task__title">${task}</div>
-                <a href="#" class="task__remove" onclick="removeTask(${index})">&times;</a>
-            `;
-            tasksList.appendChild(taskItem);
+function updateLocalstorage() {
+    let storageArray = []
+    getQueries();
+    for (let item in taskListArray) {
+        storageArray.push(taskListArray[item].querySelector('div.task__title').textContent);
+    };
+    localStorage.removeItem('taskList');
+    localStorage.setItem('taskList', JSON.stringify(storageArray));
+    removeFromTaskList();
+};
+
+function loadFromStorage(){
+    if (localStorage['taskList']) {
+        let storageArray = JSON.parse(localStorage['taskList']);
+        if (localStorage.length > 0) {
+            for (let key in storageArray) {
+                if (storageArray[key]) {
+                    taskListInsert(storageArray[key]);
+                };
+            };
+        };
+    };
+    getQueries();
+};
+
+function taskListInsert(inputValue) {
+    document.getElementById('tasks__list').insertAdjacentHTML('beforeend',
+        `<div class="task">
+                 <div class="task__title">${inputValue}</div>
+                 <a href="#" class="task__remove">&times;</a>
+              </div>`
+    );
+};
+
+function getQueries() {
+    taskListArray = Array.from(document.querySelectorAll('div.task'));
+    taskListArrayRemoveButton = Array.from(document.querySelectorAll('a.task__remove'));
+};
+
+function removeFromTaskList() {
+    if (taskListArrayRemoveButton) {
+        taskListArrayRemoveButton.forEach(function (button, index) {
+            button.onclick = function () {
+                taskListArray[index].remove();
+                updateLocalstorage();
+                return false;
+            };
         });
-    }
-
-    renderTasks();
-
-    tasksForm.addEventListener('submit', function(event) {
-        event.preventDefault();
-        if (taskInput.value.trim() === '') return;
-        
-        tasks.push(taskInput.value.trim());
-        localStorage.setItem('tasks', JSON.stringify(tasks));
-        renderTasks();
-        taskInput.value = '';
-    });
-
-    window.removeTask = function(index) {
-        tasks.splice(index, 1);
-        localStorage.setItem('tasks', JSON.stringify(tasks));
-        renderTasks();
     };
 };
+
+loadFromStorage();
+
+taskInput.oninput = function () {
+    document.getElementById('tasks__add').onclick = function () {
+        if (taskInput.value) {
+            taskListInsert(taskInput.value);
+            updateLocalstorage();
+            taskInput.value = '';
+        };
+        removeFromTaskList();
+        return false;
+    };
+};
+
+removeFromTaskList();

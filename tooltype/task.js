@@ -1,43 +1,34 @@
-const elementsWithTooltip = document.querySelectorAll('.has-tooltip');
+const tooltipElements = document.querySelectorAll('.has-tooltip');
 
-elementsWithTooltip.forEach(element => {
-    const positionValues = ['top', 'left', 'right', 'bottom'];
-    const randomPosition = positionValues[Math.floor(Math.random() * positionValues.length)];
+tooltipElements.forEach(element => {
+  element.addEventListener('click', (e) => {
+    e.preventDefault();
 
-    element.setAttribute('data-position', randomPosition);
-     const tooltip = document.createElement('div');
-     tooltip.className = 'tooltip';
-     tooltip.textContent = element.getAttribute('title');
+    const tooltipActive = element.nextElementSibling;
+    
+    if (tooltipActive && tooltipActive.classList.contains('tooltip_active')) {
+      tooltipActive.classList.remove('tooltip_active');
+      return;
+    }
+    
+    const tooltip = document.createElement('div');
+    tooltip.classList.add('tooltip');
 
-     element.appendChild(tooltip);
+    const tooltipText = element.getAttribute('title');
+    tooltip.textContent = tooltipText;
 
-     element.addEventListener('mouseover', () => {
-        const position = element.dataset.position;
-        const rect = element.getBoundingClientRect();
+    tooltip.classList.add('tooltip_active');
 
-        switch(position) {
-            case 'top':
-                tooltip.style.left = rect.left + 'px';
-                tooltip.style.top = rect.top - tooltip.offsetHeight + 'px';
-                break;
-            case 'left':
-                tooltip.style.left = rect.left - tooltip.offsetWidth + 'px';
-                tooltip.style.top = rect.top + 'px';
-                break;
-            case 'right':
-                tooltip.style.left = rect.right + 'px';
-                tooltip.style.top = rect.top + 'px';
-                break;
-            case 'bottom':
-                tooltip.style.left = rect.left + 'px';
-                tooltip.style.top = rect.bottom + 'px';
-                break;
-            default:
-                break;
-            }
-            tooltip.classList.add('tooltip_active');
-     });
-     element.addEventListener('mouseout', () => {
+    const elementPosition = element.getBoundingClientRect();
+    tooltip.style.top = `${elementPosition.bottom}px`;
+    tooltip.style.left = `${elementPosition.left}px`;
+
+    element.insertAdjacentElement('afterend', tooltip);
+
+    document.addEventListener('click', (e) => {
+      if (e.target !== element && e.target !== tooltip) {
         tooltip.classList.remove('tooltip_active');
-     });
+      }
+    });
+  });
 });
